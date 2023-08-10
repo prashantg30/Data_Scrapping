@@ -165,7 +165,7 @@ const player = async (req, res) => {
   $ = cheerio.load(await page.content());
  
       // console.log($('.cb-col.cb-col-40.text-bold').text())
-      console.log($('.cb-hm-rght').text())
+      console.log($('.cb-font-16.text-bold').text())
  
    //cb-col cb-col-60 cb-lst-itm-sm
 
