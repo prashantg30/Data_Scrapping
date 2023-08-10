@@ -154,69 +154,100 @@ const getStats = async (req, res) => {
 
 // player
 const player = async (req, res) => {
-    let intro = {};
-    let Batting = [];
-    let Bowling = [];
-    let check = true;
-    const { player_id , player_name } = req.params;
+  let intro = {};
+  let Batting = [];
+  let Bowling = [];
+  let ie = []
+  let check = true;
+  const { player_id, player_name } = req.params;
   const page = await browser.newPage();
-  await page.goto(`https://m.cricbuzz.com/profiles/${player_id}/${player_name}`);
+  await page.goto(`https://cricbuzz.com/profiles/${player_id}/${player_name}`);
   $ = cheerio.load(await page.content());
-  let img = cheerio.load($(".thumbnail").html());
-  for (let x of $(".table.table-condensed tbody tr")) {
-    let len = x.children.length;
-    if (len === 2) {
-      for (let i = 0; i < len; i += 1) {
-        if (x.children[i].tagName === "td") {
-          intro[$(x.children[i]).text()] = $(x.children[i + 1]).text();
-        }
-        break;
-      }
-    }
-    if (len === 5 ) {
-      for (let i = 0; i < len; i += 1) {
-        if (x.children[i].tagName === "td") {
-            if(check){
-                Batting.push( {
-                    "name" :  $(x.children[i]).text(),
-                    "test": $(x.children[i + 1]).text() ,
-                    "ODI" : $(x.children[i + 2]).text(),
-                    "T20I" :   $(x.children[i + 3]).text(),
-                    "IPL" : $(x.children[i + 4]).text(),
-                })
-                
-                if($(x.children[i]).text() === '6s'){
-                    check = false
-                }
-                break;
-            }
-            if(!check){
-                Bowling.push( {
-                    "name" :  $(x.children[i]).text(),
-                    "test": $(x.children[i + 1]).text() ,
-                    "ODI" : $(x.children[i + 2]).text(),
-                    "T20I" :   $(x.children[i + 3]).text(),
-                    "IPL" : $(x.children[i + 4]).text(),
-                })
-                break;
-            }
-        }
-      }
-    }
-  }
+ 
+      // console.log($('.cb-col.cb-col-40.text-bold').text())
+      console.log($('.cb-hm-rght').text())
+ 
+   //cb-col cb-col-60 cb-lst-itm-sm
 
-  Batting.shift() 
-  Bowling.shift()
-  intro.img = "http:" + img("img").attr("src");
+  let i = 0;
+
+  for (let x of $(".cb-plyr-tbl table tbody tr")) {
+
+ 
+   if(i<=3){            
+    Batting.push({
+      name: $(x.children[1]).text(),
+      m: $(x.children[3]).text(),
+      inn: $(x.children[5]).text(),
+      no: $(x.children[7]).text(),
+      runs: $(x.children[9]).text(),
+      hs: $(x.children[11]).text(),
+      avg: $(x.children[13]).text(),
+      bf: $(x.children[15]).text(),
+      sr: $(x.children[17]).text(),
+      '100': $(x.children[19]).text(),
+      '200': $(x.children[21]).text(),
+      '50': $(x.children[23]).text(),
+      "4s ": $(x.children[25]).text(),
+      "6s": $(x.children[27]).text(),
+    });}
+    if(i>3){
+      Bowling.push({
+        name: $(x.children[1]).text(),
+        m: $(x.children[3]).text(),
+        inn: $(x.children[5]).text(),
+        b: $(x.children[7]).text(),
+        runs: $(x.children[9]).text(),
+        wkts: $(x.children[11]).text(),
+        bbi: $(x.children[13]).text(),
+        bbm: $(x.children[15]).text(),
+        econ: $(x.children[17]).text(),
+        'avg': $(x.children[19]).text(),
+        'rs': $(x.children[21]).text(),
+        '5w': $(x.children[23]).text(),
+        "10w ": $(x.children[25]).text(),
+      })
+    }
+    i++
+  }
+  intro.img = `https:/` + $(".cb-col.cb-col-20.cb-col-rt img").attr("src");
   intro.Batting = Batting;
   intro.Bowling = Bowling;
-  intro.career = await career()
-  res.send(intro);  
+  intro.ie = ie
+  intro.profile = $(".cb-col.cb-col-100.cb-player-bio").text();
+  res.send(intro);
 };
 
-function career(){
-    console.log(cheerio.load($(".cb-col.cb-col-100").html()))
-    return "career"
+const getTeams = async (req, res) => {
+  const page = await browser.newPage();
+  await page.goto(`https://www.cricbuzz.com/cricket-team`);
+  $ = cheerio.load(await page.content());
+  let data = [];
+  for (let x of $(".cb-schdl-nvtb a")) {
+    console.log($(x).attr("href"));
+    let teamData = await getTeamsfromUrl(
+      `https://www.cricbuzz.com` + $(x).attr("href")
+    );
+    data.push({ teamType: $(x).text(), data: teamData });
+  }
+
+  return res.send(data);
+};
+
+async function getTeamsfromUrl(url) {
+  const page = await browser.newPage();
+  await page.goto(url);
+  $ = cheerio.load(await page.content());
+  let finalData = [];
+  $(".cb-col.cb-col-100 .cb-col.cb-col-50 ").each((i, ele) => {
+    let team = cheerio.load($(ele).html());
+    finalData.push({
+      teamId: team(".cb-col.cb-col-25 a").attr("href").split("/")[3],
+      teamName: team("h2").text(),
+      img: `https://cricbuzz.com` + team(".cb-col.cb-col-25 a img").attr("src"),
+    });
+  });
+  return finalData;
 }
 
 app.get("/cricbuzz/series", getSeriesData);
@@ -224,6 +255,7 @@ app.get("/getStats", getStats);
 app.get("/player/:player_id/:player_name", player);
 app.get("/cricbuzz/series/:id", getSeriesDetails);
 app.get("/cricbuzz/squads/:series_id", getSquads);
+app.get("/cricbuzz/getteams", getTeams);
 
 async function start() {
   browser = await puppeteer.launch({ headless: true });
