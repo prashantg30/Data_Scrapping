@@ -20,12 +20,15 @@ const getSeriesData = async (req, res) => {
   let data = [];
   $ = cheerio.load(await page.content());
   await page.close();
+  console.log($('.cb-schdl-nvtb a').text())
   $(".cb-sch-lst-itm").each((i, elem) => {
     let mydata = cheerio.load($(elem).html());
     data.push({
       seriesId: mydata("a").attr("href").split("/")[2],
       name: mydata("span").text(),
       time: mydata("div").text(),
+      year : mydata("a").attr("title").split(','),
+      // mydata : mydata.html()
     });
   });
   res.send({ data });
