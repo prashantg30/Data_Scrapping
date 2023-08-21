@@ -27,7 +27,7 @@ const getSeriesData = async (req, res) => {
       seriesId: mydata("a").attr("href").split("/")[2],
       name: mydata("span").text(),
       time: mydata("div").text(),
-      year : mydata("a").attr("title").split(','),
+      year: mydata("a").attr("title").split(','),
       // mydata : mydata.html()
     });
   });
@@ -51,9 +51,11 @@ const getSeriesDetails = async (req, res) => {
   $(".cb-series-matches").each((i, elem) => {
     let mydata = cheerio.load($(elem).html());
     data.push({
-      date: mydata(".schedule-date").text(),
-      desc: mydata(".cb-col-60.cb-col.cb-srs-mtchs-tm").text(),
-      time: mydata(".cb-col-40.cb-col.cb-srs-mtchs-tm").text(),
+      matchDate: mydata(".schedule-date").text(),
+      matchName: mydata(".cb-col-60.cb-col.cb-srs-mtchs-tm .text-hvr-underline").text(),
+      matchVenue: mydata(".cb-col-60.cb-col.cb-srs-mtchs-tm .text-gray").text(),
+      matchStatus: (mydata(".cb-col-60.cb-col.cb-srs-mtchs-tm").text()).split(",")[3],
+      matchTime: mydata(".cb-col-40.cb-col.cb-srs-mtchs-tm").text(),
     });
   });
   res.send(data);
@@ -166,35 +168,38 @@ const player = async (req, res) => {
   const page = await browser.newPage();
   await page.goto(`https://cricbuzz.com/profiles/${player_id}/${player_name}`);
   $ = cheerio.load(await page.content());
- 
-      // console.log($('.cb-col.cb-col-40.text-bold').text())
-      console.log($('.cb-font-16.text-bold').text())
- 
-   //cb-col cb-col-60 cb-lst-itm-sm
+
+  // console.log($('.cb-col.cb-col-40.text-bold').text())
+  for(let x of $('.cb-col.cb-col-33.text-black')){
+    x.children.forEach()
+  }
+
+  //cb-col cb-col-60 cb-lst-itm-sm
 
   let i = 0;
 
   for (let x of $(".cb-plyr-tbl table tbody tr")) {
 
- 
-   if(i<=3){            
-    Batting.push({
-      name: $(x.children[1]).text(),
-      m: $(x.children[3]).text(),
-      inn: $(x.children[5]).text(),
-      no: $(x.children[7]).text(),
-      runs: $(x.children[9]).text(),
-      hs: $(x.children[11]).text(),
-      avg: $(x.children[13]).text(),
-      bf: $(x.children[15]).text(),
-      sr: $(x.children[17]).text(),
-      '100': $(x.children[19]).text(),
-      '200': $(x.children[21]).text(),
-      '50': $(x.children[23]).text(),
-      "4s ": $(x.children[25]).text(),
-      "6s": $(x.children[27]).text(),
-    });}
-    if(i>3){
+
+    if (i <= 3) {
+      Batting.push({
+        name: $(x.children[1]).text(),
+        m: $(x.children[3]).text(),
+        inn: $(x.children[5]).text(),
+        no: $(x.children[7]).text(),
+        runs: $(x.children[9]).text(),
+        hs: $(x.children[11]).text(),
+        avg: $(x.children[13]).text(),
+        bf: $(x.children[15]).text(),
+        sr: $(x.children[17]).text(),
+        '100': $(x.children[19]).text(),
+        '200': $(x.children[21]).text(),
+        '50': $(x.children[23]).text(),
+        "4s ": $(x.children[25]).text(),
+        "6s": $(x.children[27]).text(),
+      });
+    }
+    if (i > 3) {
       Bowling.push({
         name: $(x.children[1]).text(),
         m: $(x.children[3]).text(),
@@ -213,10 +218,20 @@ const player = async (req, res) => {
     }
     i++
   }
+  // let careerData = cheerio.load($(".cb-col.cb-col-67.cb-bg-white.cb-plyr-rt-col .cb-hm-rght.cb-player-bio .cb-col.cb-col-100").html())
+  // for(let x of careerData(".cb-col.cb-col-16.text-bold.cb-ftr-lst")){
+  //   console.log($(x).text())
+  // }
+  // for(let x of careerData(".cb-col.cb-col-84.cb-ftr-lst")){
+  //   console.log($(x).text())
+  // }
+  // for(let x of $(".cb-col.cb-col-67.cb-bg-white.cb-plyr-rt-col .cb-hm-rght.cb-player-bio .cb-col.cb-col-100")){
+  //    console.log(cheerio.load($(x).html()).text())
+  // }
   intro.img = `https:/` + $(".cb-col.cb-col-20.cb-col-rt img").attr("src");
   intro.Batting = Batting;
   intro.Bowling = Bowling;
-  intro.ie = ie
+  // intro.career =  careerData(".cb-col.cb-col-16.text-bold.cb-ftr-lst").text() 
   intro.profile = $(".cb-col.cb-col-100.cb-player-bio").text();
   res.send(intro);
 };
