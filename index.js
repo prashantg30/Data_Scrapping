@@ -168,19 +168,8 @@ const player = async (req, res) => {
   const page = await browser.newPage();
   await page.goto(`https://cricbuzz.com/profiles/${player_id}/${player_name}`);
   $ = cheerio.load(await page.content());
-
-  // console.log($('.cb-col.cb-col-40.text-bold').text())
-  for(let x of $('.cb-col.cb-col-33.text-black')){
-    x.children.forEach()
-  }
-
-  //cb-col cb-col-60 cb-lst-itm-sm
-
   let i = 0;
-
   for (let x of $(".cb-plyr-tbl table tbody tr")) {
-
-
     if (i <= 3) {
       Batting.push({
         name: $(x.children[1]).text(),
@@ -218,21 +207,38 @@ const player = async (req, res) => {
     }
     i++
   }
-  // let careerData = cheerio.load($(".cb-col.cb-col-67.cb-bg-white.cb-plyr-rt-col .cb-hm-rght.cb-player-bio .cb-col.cb-col-100").html())
-  // for(let x of careerData(".cb-col.cb-col-16.text-bold.cb-ftr-lst")){
-  //   console.log($(x).text())
-  // }
-  // for(let x of careerData(".cb-col.cb-col-84.cb-ftr-lst")){
-  //   console.log($(x).text())
-  // }
-  // for(let x of $(".cb-col.cb-col-67.cb-bg-white.cb-plyr-rt-col .cb-hm-rght.cb-player-bio .cb-col.cb-col-100")){
-  //    console.log(cheerio.load($(x).html()).text())
-  // }
-  intro.img = `https:/` + $(".cb-col.cb-col-20.cb-col-rt img").attr("src");
+  let c = []
+  let career = {}
+  for(let s of $('.cb-col.cb-col-16.text-bold.cb-ftr-lst')){
+    c.push($(s).text())
+  }
+  let d = 0
+  for(let s of $('.cb-col.cb-col-84.cb-ftr-lst')){
+    career[c[d]] = $(s).text()
+    d++
+  }
+
+
+  let a = cheerio.load($('.cb-col.cb-col-33.text-black').html())
+  let j = []
+  intro.playerId = player_id
+  intro.name = player_name
+  for (let y of a('.cb-col.cb-col-40.text-bold.cb-lst-itm-sm')) {
+    j.push($(y).text())
+  }
+  let k = 0
+  for (let z of a('.cb-col.cb-col-60.cb-lst-itm-sm')) {
+    intro[j[k]] = $(z).text()
+    k++
+  }
+   
+ 
+  intro.img = `https://cricbuzz.com/` + $(".cb-col.cb-col-20.cb-col-rt img").attr("src");
   intro.Batting = Batting;
   intro.Bowling = Bowling;
-  // intro.career =  careerData(".cb-col.cb-col-16.text-bold.cb-ftr-lst").text() 
+  intro.career = career
   intro.profile = $(".cb-col.cb-col-100.cb-player-bio").text();
+
   res.send(intro);
 };
 
